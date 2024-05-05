@@ -21,7 +21,7 @@ export default function App() {
     const [youtubeUrl, setYoutubeUrl] = useState("")
     const [selectedFile, setSelectedFile] = useState(null)
 
-    const { selectedVideo, setSelectedVideo, setVideos, videos, videoId } = useVideoStore()
+    const { selectedVideo, setSelectedVideo, setVideos, videos } = useVideoStore()
     const { getVideoChatMessages, chatMessages, addChatMessage } = useChatStore()
 
     const onDrop = useCallback(acceptedFiles => {
@@ -118,7 +118,6 @@ export default function App() {
 
     const setVideo = (videoId) => {
         setSelectedVideo(videoId)
-        setMessages(getVideoChatMessages(videoId))
     }
 
     const uploadVideo = async () => {
@@ -185,8 +184,19 @@ export default function App() {
     }, [])
 
     useEffect(() => {
-        setMessages(getVideoChatMessages(videoId))
-    }, [videoId])
+        const unsubscribe = useChatStore.subscribe(
+            (_) => {
+                setMessages(getVideoChatMessages(selectedVideo))
+            },
+            (state) => state.chatMessages
+        )
+
+        setMessages(getVideoChatMessages(selectedVideo))
+
+        console.debug("USE EFFECT TRIGGERED")
+
+        return unsubscribe
+    }, [selectedVideo, chatMessages])
 
     return (
         <div className="min-w-screen min-h-screen bg-slate-200">
